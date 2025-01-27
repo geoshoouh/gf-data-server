@@ -1,5 +1,6 @@
 package com.gf.server.entities;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -18,4 +19,7 @@ public class GF_Client {
 
     String lastName;
     String firstName;
+    
+    @Column(unique = true)
+    String email;
 }
