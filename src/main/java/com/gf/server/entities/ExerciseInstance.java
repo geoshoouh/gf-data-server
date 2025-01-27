@@ -14,7 +14,7 @@ import lombok.Data;
 @Entity
 @Table(name="EXERCISE_INSTANCES")
 @Data
-public class Exercise_Instance {
+public class ExerciseInstance {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
