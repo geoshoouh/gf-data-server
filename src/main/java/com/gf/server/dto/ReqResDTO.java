@@ -12,7 +12,6 @@ import com.gf.server.enumerations.ExerciseEnum;
 public record ReqResDTO(
     String message,
     Long trainerId,
-    String clientEmail,
     EquipmentEnum equipmentType,
     ExerciseEnum exerciseType,
     GF_Client client,
