@@ -7,7 +7,7 @@ import com.gf.server.dto.ReqResDTO;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.exceptions.FailedSaveException;
 import com.gf.server.repositories.ClientRepository;
-import com.gf.server.repositories.ExerciseInstanceRepository;
+import com.gf.server.repositories.ExerciseRecordRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -18,7 +18,7 @@ public class GF_DataManagementService {
     private ClientRepository clientRepository;
 
     @Autowired
-    private ExerciseInstanceRepository exerciseInstanceRepository;
+    private ExerciseRecordRepository exerciseRecordRepository;
 
     public ReqResDTO createClient(ReqResDTO request) throws FailedSaveException {
 
@@ -60,5 +60,15 @@ public class GF_DataManagementService {
         );
 
         return response;
+    }
+
+    public void clearClientRepository() {
+
+        this.clientRepository.deleteAll();
+    }
+
+    public void clearExerciseRecordRepository() {
+
+        this.exerciseRecordRepository.deleteAll();
     }
 }
