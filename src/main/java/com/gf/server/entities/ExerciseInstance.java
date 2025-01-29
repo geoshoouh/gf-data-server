@@ -1,7 +1,7 @@
 package com.gf.server.entities;
 
 import com.gf.server.enumerations.ExerciseEnum;
-import com.gf.server.enumerations.ExerciseTypeEnum;
+import com.gf.server.enumerations.EquipmentEnum;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,9 +23,12 @@ public class ExerciseInstance {
     @ManyToOne
     private GF_Client client;
 
-    ExerciseTypeEnum exerciseType;
+    EquipmentEnum exerciseType;
     ExerciseEnum exercise;
     
+    int resistance;
     int seatSetting;
-    int weight;
+    int padSetting;
+    int rightArm;
+    int leftArm;
 }
