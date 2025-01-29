@@ -19,6 +19,8 @@ public class ExerciseInstance {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
+
+    private Long trainerId;
     
     @ManyToOne
     private GF_Client client;
