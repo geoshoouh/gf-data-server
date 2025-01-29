@@ -71,4 +71,14 @@ public class GF_DataManagementService {
 
         this.exerciseRecordRepository.deleteAll();
     }
+
+    public Long getClientCount() {
+
+        return this.clientRepository.count();
+    }
+
+    public Long getExerciseRecordCount() {
+
+        return this.exerciseRecordRepository.count();
+    }
 }
