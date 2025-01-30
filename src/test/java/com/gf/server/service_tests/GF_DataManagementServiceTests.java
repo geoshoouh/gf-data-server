@@ -17,6 +17,24 @@ public class GF_DataManagementServiceTests {
     @Autowired
     GF_DataManagementService dataManagementService;
 
+    GF_Client clientCreationUtil(String email) {
+
+        GF_Client newClient = new GF_Client();
+
+        newClient.setEmail(email);
+
+        ReqResDTO request = new ReqResDTO(
+            null, 
+            null, 
+            null, 
+            null, 
+            newClient, 
+            null
+        );
+
+        return this.dataManagementService.createClient(request).client();
+    }
+
     @AfterEach
     void clearRepositories() {
         
@@ -48,5 +66,26 @@ public class GF_DataManagementServiceTests {
         Assert.isTrue(createdClient.getEmail() == newClient.getEmail(), "Expected created client value " + newClient.getEmail() + ", was " + createdClient.getEmail());
         Assert.isTrue(createdClient.getFirstName() == newClient.getFirstName(), "Expected created client value " + newClient.getFirstName() + ", was " + createdClient.getFirstName());
         Assert.isTrue(createdClient.getLastName() == newClient.getLastName(), "Expected created client value " + newClient.getLastName() + ", was " + createdClient.getLastName());
+    }
+
+    @Test
+    void getClientByEmailGetsClientByEmail() {
+
+        String email = RandomStringUtils.randomAlphanumeric(7) + "@" + RandomStringUtils.randomAlphabetic(4) + ".com";
+
+        GF_Client createdClient = this.clientCreationUtil(email);
+
+        ReqResDTO request = new ReqResDTO(
+            null, 
+            null, 
+            null, 
+            null, 
+            createdClient, 
+            null
+        );
+
+        GF_Client foundClient = this.dataManagementService.getClientByEmail(request).client();
+
+        Assert.isTrue(foundClient.getEmail() == email, "Expect email " + email + "; was " + foundClient.getEmail());
     }
 }
