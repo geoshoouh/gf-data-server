@@ -3,7 +3,6 @@ package com.gf.server.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.gf.server.dto.ReqResDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.enumerations.EquipmentEnum;
@@ -43,11 +42,10 @@ public class GF_DataManagementService {
         return this.clientRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException());
     }
 
-    /* 
     public ExerciseRecord getLatestExerciseRecord(Long clientId, EquipmentEnum equipmentType, ExerciseEnum exercise) throws EntityNotFoundException {
 
+        return new ExerciseRecord();
     }
-    */
 
     public void clearClientRepository() {
 

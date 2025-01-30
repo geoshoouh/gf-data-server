@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
 
-import com.gf.server.dto.ReqResDTO;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.services.GF_DataManagementService;
 
