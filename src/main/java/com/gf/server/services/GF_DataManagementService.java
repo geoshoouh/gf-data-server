@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.gf.server.dto.ReqResDTO;
+import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
+import com.gf.server.enumerations.EquipmentEnum;
+import com.gf.server.enumerations.ExerciseEnum;
 import com.gf.server.exceptions.FailedSaveException;
 import com.gf.server.repositories.ClientRepository;
 import com.gf.server.repositories.ExerciseRecordRepository;
@@ -20,47 +23,31 @@ public class GF_DataManagementService {
     @Autowired
     private ExerciseRecordRepository exerciseRecordRepository;
 
-    public ReqResDTO createClient(ReqResDTO request) throws FailedSaveException {
+    public GF_Client createClient(String email, String lastName, String firstName) throws FailedSaveException {
 
-        if (clientRepository.findByEmail(request.client().getEmail()).isPresent()) {
-            throw new FailedSaveException("Cannot create new instance of client with email " + request.client().getEmail() + "; already exists");
+        if (clientRepository.findByEmail(email).isPresent()) {
+            throw new FailedSaveException("Cannot create new instance of client with email " + email + "; already exists");
         }
 
         GF_Client newClient = new GF_Client();
 
-        newClient.setEmail(request.client().getEmail());
-        newClient.setFirstName(request.client().getFirstName());
-        newClient.setLastName(request.client().getLastName());
+        newClient.setEmail(email);
+        newClient.setFirstName(firstName);
+        newClient.setLastName(lastName);
         
-        GF_Client createdClient = this.clientRepository.save(newClient);
-
-        ReqResDTO response = new ReqResDTO(
-            null, 
-            null, 
-            null, 
-            null, 
-            createdClient, 
-            null
-        );
-
-        return response;
+        return this.clientRepository.save(newClient);
     }
 
-    public ReqResDTO getClientByEmail(ReqResDTO request) throws EntityNotFoundException {
+    public GF_Client getClientByEmail(String email) throws EntityNotFoundException {
 
-        GF_Client client = this.clientRepository.findByEmail(request.client().getEmail()).orElseThrow(() -> new EntityNotFoundException());
-
-        ReqResDTO response = new ReqResDTO(
-            null, 
-            null, 
-            null, 
-            null, 
-            client, 
-            null
-        );
-
-        return response;
+        return this.clientRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException());
     }
+
+    /* 
+    public ExerciseRecord getLatestExerciseRecord(Long clientId, EquipmentEnum equipmentType, ExerciseEnum exercise) throws EntityNotFoundException {
+
+    }
+    */
 
     public void clearClientRepository() {
 
