@@ -25,7 +25,7 @@ public class ExerciseRecord {
     @ManyToOne
     private GF_Client client;
 
-    EquipmentEnum exerciseType;
+    EquipmentEnum equipmentType;
     ExerciseEnum exercise;
     
     int resistance;
