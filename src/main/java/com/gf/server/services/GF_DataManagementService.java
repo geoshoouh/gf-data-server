@@ -1,5 +1,8 @@
 package com.gf.server.services;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -42,9 +45,21 @@ public class GF_DataManagementService {
         return this.clientRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException());
     }
 
-    public ExerciseRecord getLatestExerciseRecord(Long clientId, EquipmentEnum equipmentType, ExerciseEnum exercise) throws EntityNotFoundException {
+    public ExerciseRecord getLatestExerciseRecord(String clientEmail, EquipmentEnum equipmentType, ExerciseEnum exercise) throws EntityNotFoundException {
+        
+        Optional<GF_Client> client = this.clientRepository.findByEmail(clientEmail);
 
-        return new ExerciseRecord();
+        if (!client.isPresent()) {
+            throw new EntityNotFoundException();
+        }
+
+        Optional<List<ExerciseRecord>> exerciseRecord = this.exerciseRecordRepository.findByClientAndEquipmentTypeAndExerciseOrderByDateTime(client.get(), equipmentType, exercise);
+
+        if (!exerciseRecord.isPresent()) {
+            throw new EntityNotFoundException();
+        }
+
+        return exerciseRecord.get().get(0);
     }
 
     public void clearClientRepository() {

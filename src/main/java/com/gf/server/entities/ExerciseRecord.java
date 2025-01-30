@@ -1,6 +1,9 @@
 package com.gf.server.entities;
 
 import com.gf.server.enumerations.ExerciseEnum;
+
+import java.util.Date;
+
 import com.gf.server.enumerations.EquipmentEnum;
 
 import jakarta.persistence.Entity;
@@ -33,4 +36,6 @@ public class ExerciseRecord {
     int padSetting;
     int rightArm;
     int leftArm;
+    
+    Date dateTime;
 }
