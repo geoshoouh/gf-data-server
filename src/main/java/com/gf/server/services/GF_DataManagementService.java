@@ -45,6 +45,13 @@ public class GF_DataManagementService {
         return this.clientRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException());
     }
 
+    public ExerciseRecord createExerciseRecord(ExerciseRecord exerciseRecord) {
+
+        ExerciseRecord savedRecord = this.exerciseRecordRepository.save(exerciseRecord);
+
+        return savedRecord;
+    }
+
     public ExerciseRecord getLatestExerciseRecord(String clientEmail, EquipmentEnum equipmentType, ExerciseEnum exercise) throws EntityNotFoundException {
         
         Optional<GF_Client> client = this.clientRepository.findByEmail(clientEmail);
