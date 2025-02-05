@@ -1,6 +1,7 @@
 package com.gf.server.controllers;
 
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
 
 import com.gf.server.dto.ReqResDTO;
 import com.gf.server.entities.GF_Client;
@@ -18,6 +19,26 @@ public class GF_DataManagementController {
 
     @Autowired
     GF_DataManagementService dataManagementService;
+
+    @Autowired
+    RestClient restClient;
+
+    private boolean validateToken(String token) {
+
+        boolean retVal = false;
+
+        Boolean result = this.restClient.get()
+                                        .uri("10.97.207.231:8080/auth/token/validate/trainer")
+                                        .header("Authorization", "Bearer " + token)
+                                        .retrieve()
+                                        .body(Boolean.class);
+        
+        if (result != null) {
+            retVal = result.booleanValue();
+        }
+        
+        return retVal;
+    }
 
     @GetMapping("/ping/data-server")
     public ResponseEntity<String> getMethodName() {
