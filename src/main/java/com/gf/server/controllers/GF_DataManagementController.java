@@ -1,7 +1,6 @@
 package com.gf.server.controllers;
 
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
@@ -12,7 +11,6 @@ import com.gf.server.services.GF_DataManagementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,7 +53,10 @@ public class GF_DataManagementController {
     }
 
     @PostMapping("/trainer/new/user")
-    public ResponseEntity<ReqResDTO> createClient(@RequestHeader(HttpHeaders.AUTHORIZATION) @RequestBody ReqResDTO request) {
+    public ResponseEntity<ReqResDTO> createClient(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) {
+
+        this.validateToken(token);
+
         GF_Client client = this.dataManagementService.createClient(request.client().getEmail(), request.client().getLastName(), request.client().getFirstName());
 
         ReqResDTO response = new ReqResDTO(
