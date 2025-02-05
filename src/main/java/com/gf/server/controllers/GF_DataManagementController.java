@@ -1,7 +1,9 @@
 package com.gf.server.controllers;
 
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
 import com.gf.server.dto.ReqResDTO;
 import com.gf.server.entities.GF_Client;
@@ -9,6 +11,8 @@ import com.gf.server.services.GF_DataManagementService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +27,8 @@ public class GF_DataManagementController {
     GF_DataManagementService dataManagementService;
 
 
-    private boolean validateToken(String token) {
+    @SuppressWarnings("null")
+    private boolean validateToken(String token) throws Unauthorized {
 
         boolean retVal = false;
 
@@ -35,10 +40,12 @@ public class GF_DataManagementController {
                                    .retrieve()
                                    .body(Boolean.class);
         
-        if (result != null) {
-            retVal = result.booleanValue();
+        if (result != null && result.booleanValue()) {
+            retVal = true;
+        } else {
+            throw Unauthorized.create(null, HttpStatus.UNAUTHORIZED,null, null, null, null);
         }
-
+        
         return retVal;
     }
 
