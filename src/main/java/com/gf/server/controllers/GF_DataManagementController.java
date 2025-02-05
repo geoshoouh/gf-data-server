@@ -8,10 +8,12 @@ import com.gf.server.entities.GF_Client;
 import com.gf.server.services.GF_DataManagementService;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 
 @RestController
@@ -46,7 +48,7 @@ public class GF_DataManagementController {
     }
 
     @PostMapping("/trainer/new/user")
-    public ResponseEntity<ReqResDTO> createClient(@RequestBody ReqResDTO request) {
+    public ResponseEntity<ReqResDTO> createClient(@RequestHeader(HttpHeaders.AUTHORIZATION) @RequestBody ReqResDTO request) {
         GF_Client client = this.dataManagementService.createClient(request.client().getEmail(), request.client().getLastName(), request.client().getFirstName());
 
         ReqResDTO response = new ReqResDTO(
