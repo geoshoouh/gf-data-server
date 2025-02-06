@@ -26,7 +26,7 @@ public class GF_DataManagementController {
 
 
     @SuppressWarnings("null")
-    private boolean validateToken(String token) throws Unauthorized {
+    public boolean validateToken(String token) throws Unauthorized {
 
         boolean retVal = false;
 
