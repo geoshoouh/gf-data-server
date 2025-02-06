@@ -1,5 +1,9 @@
 package com.gf.server.service_tests;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.Random;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -7,7 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.Assert;
 
+import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
+import com.gf.server.enumerations.EquipmentEnum;
+import com.gf.server.enumerations.ExerciseEnum;
 import com.gf.server.services.GF_DataManagementService;
 
 @SpringBootTest
@@ -16,7 +23,7 @@ public class GF_DataManagementServiceTests {
     @Autowired
     GF_DataManagementService dataManagementService;
 
-    GF_Client clientCreationUtil(String email) {
+    GF_Client clientCreationUtilPersistent(String email) {
         
         String newClientEmail = email;
         String newClientFirstName = RandomStringUtils.randomAlphabetic(7);
@@ -25,11 +32,30 @@ public class GF_DataManagementServiceTests {
         return this.dataManagementService.createClient(newClientEmail, newClientLastName, newClientFirstName);
     }
 
-    @AfterEach
-    void clearRepositories() {
+    GF_Client clientCreationUtilPersistent() {
+        return this.clientCreationUtilPersistent(RandomStringUtils.randomAlphanumeric(7) + "@" + RandomStringUtils.randomAlphabetic(4) + ".com");
+    }
+
+    // Does not Persist
+    ExerciseRecord exerciseRecordCreationUtil() {
+
+        GF_Client client = clientCreationUtilPersistent();
+
+        ExerciseRecord exerciseRecord = new ExerciseRecord();
         
-        this.dataManagementService.clearClientRepository();
+        exerciseRecord.setClient(client);
+        exerciseRecord.setDateTime(Date.from(Instant.now()));
+        exerciseRecord.setEquipmentType(EquipmentEnum.values()[new Random().nextInt(EquipmentEnum.values().length)]);
+        exerciseRecord.setExercise(ExerciseEnum.values()[new Random().nextInt(ExerciseEnum.values().length)]);
+
+        return exerciseRecord;
+    }
+
+    @AfterEach
+    void teardown() {
+        
         this.dataManagementService.clearExerciseRecordRepository();
+        this.dataManagementService.clearClientRepository();
     }
 
     @Test
@@ -52,10 +78,23 @@ public class GF_DataManagementServiceTests {
 
         String email = RandomStringUtils.randomAlphanumeric(7) + "@" + RandomStringUtils.randomAlphabetic(4) + ".com";
 
-        this.clientCreationUtil(email);
+        this.clientCreationUtilPersistent(email);
 
         GF_Client foundClient = this.dataManagementService.getClientByEmail(email);
 
         Assert.isTrue(foundClient.getEmail() == email, "Expect email " + email + "; was " + foundClient.getEmail());
+    }
+
+    @Test
+    void createNewExerciseRecordCreatesNewExerciseRecord() {
+
+        ExerciseRecord exerciseRecord = this.exerciseRecordCreationUtil();
+
+        Assert.isNull(exerciseRecord.getId(), "Expected pre-insert exercise record to have null ID");
+
+        ExerciseRecord createdExerciseRecord = this.dataManagementService.createExerciseRecord(exerciseRecord);
+
+        Assert.notNull(createdExerciseRecord.getId(), "Exercise record ID was null");
+        Assert.isTrue(exerciseRecord.getClient().getId() == createdExerciseRecord.getClient().getId(), "Client ID's not equal");
     }
 }

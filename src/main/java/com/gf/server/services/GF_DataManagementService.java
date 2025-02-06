@@ -1,5 +1,7 @@
 package com.gf.server.services;
 
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +49,8 @@ public class GF_DataManagementService {
 
     public ExerciseRecord createExerciseRecord(ExerciseRecord exerciseRecord) {
 
+        exerciseRecord.setDateTime(Date.from(Instant.now()));
+        
         ExerciseRecord savedRecord = this.exerciseRecordRepository.save(exerciseRecord);
 
         return savedRecord;

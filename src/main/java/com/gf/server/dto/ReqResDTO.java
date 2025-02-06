@@ -15,5 +15,5 @@ public record ReqResDTO(
     EquipmentEnum equipmentType,
     ExerciseEnum exerciseType,
     GF_Client client,
-    ExerciseRecord exerciseInstance
+    ExerciseRecord exerciseRecord
 ) {} 

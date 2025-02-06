@@ -5,6 +5,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
 import com.gf.server.dto.ReqResDTO;
+import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.services.GF_DataManagementService;
 
@@ -70,4 +71,21 @@ public class GF_DataManagementController {
         return ResponseEntity.ok(response);
     }
     
+    @PostMapping("/trainer/new/record")
+    public ResponseEntity<ReqResDTO> createExerciseRecord(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) throws Unauthorized {
+
+        this.validateToken(token);
+
+        ExerciseRecord exerciseRecord = this.dataManagementService.createExerciseRecord(request.exerciseRecord());
+        
+        ReqResDTO response = new ReqResDTO(
+            "Successfully created exercise record with ID " + exerciseRecord.getId().toString(),
+            null, 
+            null, 
+            null, 
+            null, 
+            exerciseRecord);
+
+        return ResponseEntity.ok(response);
+    }
 }
