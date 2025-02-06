@@ -53,7 +53,7 @@ public class GF_DataManagementController {
     }
 
     @PostMapping("/trainer/new/client")
-    public ResponseEntity<ReqResDTO> createClient(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) {
+    public ResponseEntity<ReqResDTO> createClient(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) throws Unauthorized {
 
         this.validateToken(token);
 
