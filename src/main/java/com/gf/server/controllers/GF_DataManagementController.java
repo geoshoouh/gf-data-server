@@ -32,13 +32,13 @@ public class GF_DataManagementController {
 
         RestClient restClient = RestClient.create();
 
-        Boolean result = restClient.get()
-                                   .uri("10.97.207.231:8080/auth/token/validate/trainer")
-                                   .header("Authorization", "Bearer " + token)
-                                   .retrieve()
-                                   .body(Boolean.class);
+        ResponseEntity<Boolean> result = restClient.get()
+                                                  .uri("https://app.gfproto.xyz/auth/token/validate/trainer")
+                                                  .header("Authorization", token)
+                                                  .retrieve()
+                                                  .toEntity(Boolean.class);
         
-        if (result != null && result.booleanValue()) {
+        if (result != null && result.getStatusCode() == HttpStatus.OK) {
             retVal = true;
         } else {
             throw Unauthorized.create(null, HttpStatus.UNAUTHORIZED,null, null, null, null);
@@ -52,7 +52,7 @@ public class GF_DataManagementController {
         return  ResponseEntity.ok("Genesis Personal Fitness Data Server is HEALTHY.\n");
     }
 
-    @PostMapping("/trainer/new/user")
+    @PostMapping("/trainer/new/client")
     public ResponseEntity<ReqResDTO> createClient(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) {
 
         this.validateToken(token);
