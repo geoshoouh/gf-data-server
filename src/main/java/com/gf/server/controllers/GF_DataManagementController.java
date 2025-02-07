@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-
 @RestController
 public class GF_DataManagementController {
 
@@ -88,4 +87,23 @@ public class GF_DataManagementController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/trainer/get/record/latest")
+    public ResponseEntity<ReqResDTO> getLatestExerciseRecord(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        ExerciseRecord latestRecord = this.dataManagementService.getLatestExerciseRecord(request.client().getEmail(), request.equipmentType(), request.exerciseType());
+
+        ReqResDTO response = new ReqResDTO(
+            "Successfully retrieved latest exercise for client " + request.client().getLastName() + " on " + request.equipmentType().toString() + " doing " + request.exerciseType().toString(),
+            null, 
+            null, 
+            null, 
+            null, 
+            latestRecord);
+
+        return ResponseEntity.ok(response);
+    }
+    
 }

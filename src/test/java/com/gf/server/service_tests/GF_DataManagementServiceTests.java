@@ -113,7 +113,6 @@ public class GF_DataManagementServiceTests {
 
         Assert.isTrue(this.dataManagementService.getExerciseRecordCount() == 5L, "Expected exercise record count to be 5; was " + this.dataManagementService.getExerciseRecordCount());
 
-
         ExerciseRecord fetchedLatestExerciseRecord = this.dataManagementService.getLatestExerciseRecord(latestExerciseRecord.getClient().getEmail(), latestExerciseRecord.getEquipmentType(), latestExerciseRecord.getExercise());
 
         Assert.isTrue(fetchedLatestExerciseRecord.getId() == latestExerciseRecord.getId(), "Expected id on latest record " + latestExerciseRecord.getId() + "; was " + fetchedLatestExerciseRecord.getId());

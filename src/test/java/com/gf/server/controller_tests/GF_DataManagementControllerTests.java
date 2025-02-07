@@ -71,6 +71,11 @@ public class GF_DataManagementControllerTests {
         return exerciseRecord;
     }
 
+    ExerciseRecord exerciseRecordCreationUtilPersistent() {
+
+        return this.dataManagementService.createExerciseRecord(this.exerciseRecordCreationUtil());
+    }
+
     @BeforeEach
     void setup() {
         doReturn(true).when(this.dataManagementController).validateToken(this.jwt);
@@ -145,5 +150,38 @@ public class GF_DataManagementControllerTests {
         Assert.notNull(response.exerciseRecord().getId(), "Response exercise record ID was null");
         Assert.notNull(response.exerciseRecord().getDateTime(), "Response exercise record datatime was null");
         Assert.isTrue(response.exerciseRecord().getClient().getId() == exerciseRecord.getClient().getId(), "Client ID of persisted exercise record did not match that of original.");
+    }
+
+    @Test
+    void getLatestExerciseRecordGetsLatestExerciseRecord() throws Exception {
+
+        for (int i = 0; i < 4; i++) {
+            this.exerciseRecordCreationUtilPersistent();
+        }
+
+        ExerciseRecord latestExerciseRecord = this.exerciseRecordCreationUtilPersistent();
+        String latestExerciseRecordClientEmail = latestExerciseRecord.getClient().getEmail();
+
+        GF_Client requestClient = new GF_Client();
+
+        requestClient.setEmail(latestExerciseRecordClientEmail);
+
+        ReqResDTO request = new ReqResDTO(
+            null,
+            null,
+            latestExerciseRecord.getEquipmentType(),
+            latestExerciseRecord.getExercise(),
+            requestClient,
+            null);
+
+        ReqResDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/record/latest").header("Authorization", this.jwt)
+                                                                                                             .contentType(MediaType.APPLICATION_JSON)
+                                                                                                             .content(gson.toJson(request)))
+                                                        .andExpect(status().isOk())
+                                                        .andReturn()
+                                                        .getResponse()
+                                                        .getContentAsString(), ReqResDTO.class);
+
+        Assert.isTrue(response.exerciseRecord().getId() == latestExerciseRecord.getId(), "Expected exercise ID " + latestExerciseRecord.getId() + "; was " + response.exerciseRecord().getId());
     }
 }
