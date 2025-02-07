@@ -36,7 +36,6 @@ public class GF_DataManagementServiceTests {
         return this.clientCreationUtilPersistent(RandomStringUtils.randomAlphanumeric(7) + "@" + RandomStringUtils.randomAlphabetic(4) + ".com");
     }
 
-    // Does not Persist
     ExerciseRecord exerciseRecordCreationUtil() {
 
         GF_Client client = clientCreationUtilPersistent();
@@ -49,6 +48,11 @@ public class GF_DataManagementServiceTests {
         exerciseRecord.setExercise(ExerciseEnum.values()[new Random().nextInt(ExerciseEnum.values().length)]);
 
         return exerciseRecord;
+    }
+
+    ExerciseRecord exerciseRecordCreationUtilPersistent() {
+
+        return this.dataManagementService.createExerciseRecord(this.exerciseRecordCreationUtil());
     }
 
     @AfterEach
@@ -96,5 +100,22 @@ public class GF_DataManagementServiceTests {
 
         Assert.notNull(createdExerciseRecord.getId(), "Exercise record ID was null");
         Assert.isTrue(exerciseRecord.getClient().getId() == createdExerciseRecord.getClient().getId(), "Client ID's not equal");
+    }
+
+    @Test
+    void getLatestExerciseRecordGetsLatestExerciseRecord() {
+
+        for (int i = 0; i < 4; i++) {
+            this.exerciseRecordCreationUtilPersistent();
+        }
+
+        ExerciseRecord latestExerciseRecord = this.exerciseRecordCreationUtilPersistent();
+
+        Assert.isTrue(this.dataManagementService.getExerciseRecordCount() == 5L, "Expected exercise record count to be 5; was " + this.dataManagementService.getExerciseRecordCount());
+
+
+        ExerciseRecord fetchedLatestExerciseRecord = this.dataManagementService.getLatestExerciseRecord(latestExerciseRecord.getClient().getEmail(), latestExerciseRecord.getEquipmentType(), latestExerciseRecord.getExercise());
+
+        Assert.isTrue(fetchedLatestExerciseRecord.getId() == latestExerciseRecord.getId(), "Expected id on latest record " + latestExerciseRecord.getId() + "; was " + fetchedLatestExerciseRecord.getId());
     }
 }
