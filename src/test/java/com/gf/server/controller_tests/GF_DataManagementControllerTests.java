@@ -91,7 +91,7 @@ public class GF_DataManagementControllerTests {
     @Test
     void canPingServer() throws Exception {
 
-        this.mockMvc.perform(get("/ping/data-server")).andExpect(status().isOk());
+        this.mockMvc.perform(get("/ping-data-server")).andExpect(status().isOk());
     }
 
     @Test

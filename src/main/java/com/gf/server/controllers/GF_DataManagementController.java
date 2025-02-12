@@ -47,7 +47,7 @@ public class GF_DataManagementController {
         return retVal;
     }
 
-    @GetMapping("/ping/data-server")
+    @GetMapping("/ping-data-server")
     public ResponseEntity<String> getMethodName() {
         return  ResponseEntity.ok("Genesis Personal Fitness Data Server is HEALTHY.\n");
     }
