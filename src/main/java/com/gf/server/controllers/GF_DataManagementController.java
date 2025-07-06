@@ -78,15 +78,20 @@ public class GF_DataManagementController {
 
         this.validateToken(token);
 
-        ExerciseRecord exerciseRecord = this.dataManagementService.createExerciseRecord(request.exerciseRecord());
+        GF_Client existingClient = this.dataManagementService.getClientByEmail(request.exerciseRecord().getClient().getEmail());
+        
+        ExerciseRecord exerciseRecord = request.exerciseRecord();
+        exerciseRecord.setClient(existingClient);
+        
+        ExerciseRecord savedRecord = this.dataManagementService.createExerciseRecord(exerciseRecord);
         
         ReqResDTO response = new ReqResDTO(
-            "Successfully created exercise record with ID " + exerciseRecord.getId().toString(),
+            "Successfully created exercise record with ID " + savedRecord.getId().toString(),
             null, 
             null, 
             null, 
             null, 
-            exerciseRecord);
+            savedRecord);
 
         return ResponseEntity.ok(response);
     }
