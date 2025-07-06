@@ -13,6 +13,7 @@ import org.springframework.util.Assert;
 
 import com.gf.server.controllers.GF_DataManagementController;
 import com.gf.server.dto.ReqResDTO;
+import com.gf.server.dto.ListResponseDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.enumerations.EquipmentEnum;
@@ -26,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.Random;
+import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -183,5 +185,74 @@ public class GF_DataManagementControllerTests {
                                                         .getContentAsString(), ReqResDTO.class);
 
         Assert.isTrue(response.exerciseRecord().getId() == latestExerciseRecord.getId(), "Expected exercise ID " + latestExerciseRecord.getId() + "; was " + response.exerciseRecord().getId());
+    }
+
+    @Test
+    void canGetAllClients() throws Exception {
+        
+        // Create some test clients
+        GF_Client client1 = this.clientCreationUtilPersistent();
+        GF_Client client2 = this.clientCreationUtilPersistent();
+        GF_Client client3 = this.clientCreationUtilPersistent();
+
+        ListResponseDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/clients").header("Authorization", this.jwt))
+                                                        .andExpect(status().isOk())
+                                                        .andReturn()
+                                                        .getResponse()
+                                                        .getContentAsString(), ListResponseDTO.class);
+
+        Assert.notNull(response.clients(), "Clients list should not be null");
+        Assert.isTrue(response.clients().size() >= 3, "Should have at least 3 clients");
+        Assert.isTrue(response.message().contains("3"), "Message should indicate 3 clients were retrieved");
+    }
+
+    @Test
+    void canGetAllEquipmentTypes() throws Exception {
+
+        ListResponseDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/equipment-types").header("Authorization", this.jwt))
+                                                        .andExpect(status().isOk())
+                                                        .andReturn()
+                                                        .getResponse()
+                                                        .getContentAsString(), ListResponseDTO.class);
+
+        Assert.notNull(response.equipmentTypes(), "Equipment types should not be null");
+        Assert.isTrue(response.equipmentTypes().length == EquipmentEnum.values().length, "Should return all equipment types");
+        Assert.isTrue(response.message().contains(String.valueOf(EquipmentEnum.values().length)), "Message should indicate correct number of equipment types");
+    }
+
+    @Test
+    void canGetAllExerciseTypes() throws Exception {
+
+        ListResponseDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/exercise-types").header("Authorization", this.jwt))
+                                                        .andExpect(status().isOk())
+                                                        .andReturn()
+                                                        .getResponse()
+                                                        .getContentAsString(), ListResponseDTO.class);
+
+        Assert.notNull(response.exerciseTypes(), "Exercise types should not be null");
+        Assert.isTrue(response.exerciseTypes().length == ExerciseEnum.values().length, "Should return all exercise types");
+        Assert.isTrue(response.message().contains(String.valueOf(ExerciseEnum.values().length)), "Message should indicate correct number of exercise types");
+    }
+
+    @Test
+    void canGetAllData() throws Exception {
+        
+        // Create some test clients
+        GF_Client client1 = this.clientCreationUtilPersistent();
+        GF_Client client2 = this.clientCreationUtilPersistent();
+
+        ListResponseDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/all").header("Authorization", this.jwt))
+                                                        .andExpect(status().isOk())
+                                                        .andReturn()
+                                                        .getResponse()
+                                                        .getContentAsString(), ListResponseDTO.class);
+
+        Assert.notNull(response.clients(), "Clients list should not be null");
+        Assert.notNull(response.equipmentTypes(), "Equipment types should not be null");
+        Assert.notNull(response.exerciseTypes(), "Exercise types should not be null");
+        Assert.isTrue(response.clients().size() >= 2, "Should have at least 2 clients");
+        Assert.isTrue(response.equipmentTypes().length == EquipmentEnum.values().length, "Should return all equipment types");
+        Assert.isTrue(response.exerciseTypes().length == ExerciseEnum.values().length, "Should return all exercise types");
+        Assert.isTrue(response.message().contains("2"), "Message should indicate 2 clients were retrieved");
     }
 }

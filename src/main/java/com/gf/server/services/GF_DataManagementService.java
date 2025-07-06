@@ -92,4 +92,16 @@ public class GF_DataManagementService {
 
         return this.exerciseRecordRepository.count();
     }
+
+    public List<GF_Client> getAllClients() {
+        return this.clientRepository.findAll();
+    }
+
+    public EquipmentEnum[] getAllEquipmentTypes() {
+        return EquipmentEnum.values();
+    }
+
+    public ExerciseEnum[] getAllExerciseTypes() {
+        return ExerciseEnum.values();
+    }
 }

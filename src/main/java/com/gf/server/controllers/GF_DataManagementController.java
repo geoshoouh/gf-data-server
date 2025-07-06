@@ -5,6 +5,7 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
 import com.gf.server.dto.ReqResDTO;
+import com.gf.server.dto.ListResponseDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.services.GF_DataManagementService;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+
+import java.util.List;
 
 @RestController
 public class GF_DataManagementController {
@@ -102,6 +105,72 @@ public class GF_DataManagementController {
             null, 
             null, 
             latestRecord);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/trainer/get/clients")
+    public ResponseEntity<ListResponseDTO> getAllClients(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        List<GF_Client> clients = this.dataManagementService.getAllClients();
+
+        ListResponseDTO response = new ListResponseDTO(
+            "Successfully retrieved " + clients.size() + " clients",
+            clients,
+            null,
+            null);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/trainer/get/equipment-types")
+    public ResponseEntity<ListResponseDTO> getAllEquipmentTypes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        var equipmentTypes = this.dataManagementService.getAllEquipmentTypes();
+
+        ListResponseDTO response = new ListResponseDTO(
+            "Successfully retrieved " + equipmentTypes.length + " equipment types",
+            null,
+            equipmentTypes,
+            null);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/trainer/get/exercise-types")
+    public ResponseEntity<ListResponseDTO> getAllExerciseTypes(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        var exerciseTypes = this.dataManagementService.getAllExerciseTypes();
+
+        ListResponseDTO response = new ListResponseDTO(
+            "Successfully retrieved " + exerciseTypes.length + " exercise types",
+            null,
+            null,
+            exerciseTypes);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/trainer/get/all")
+    public ResponseEntity<ListResponseDTO> getAllData(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        List<GF_Client> clients = this.dataManagementService.getAllClients();
+        var equipmentTypes = this.dataManagementService.getAllEquipmentTypes();
+        var exerciseTypes = this.dataManagementService.getAllExerciseTypes();
+
+        ListResponseDTO response = new ListResponseDTO(
+            "Successfully retrieved " + clients.size() + " clients, " + equipmentTypes.length + " equipment types, and " + exerciseTypes.length + " exercise types",
+            clients,
+            equipmentTypes,
+            exerciseTypes);
 
         return ResponseEntity.ok(response);
     }
