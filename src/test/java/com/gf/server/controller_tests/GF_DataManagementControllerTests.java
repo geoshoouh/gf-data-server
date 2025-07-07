@@ -176,7 +176,7 @@ public class GF_DataManagementControllerTests {
             requestClient,
             null);
 
-        ReqResDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/record/latest").header("Authorization", this.jwt)
+        ReqResDTO response = gson.fromJson(this.mockMvc.perform(post("/trainer/get/record/latest").header("Authorization", this.jwt)
                                                                                                              .contentType(MediaType.APPLICATION_JSON)
                                                                                                              .content(gson.toJson(request)))
                                                         .andExpect(status().isOk())

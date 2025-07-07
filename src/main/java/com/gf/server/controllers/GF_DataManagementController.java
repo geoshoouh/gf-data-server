@@ -96,7 +96,7 @@ public class GF_DataManagementController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/trainer/get/record/latest")
+    @PostMapping("/trainer/get/record/latest")
     public ResponseEntity<ReqResDTO> getLatestExerciseRecord(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ReqResDTO request) throws Unauthorized {
         
         this.validateToken(token);
