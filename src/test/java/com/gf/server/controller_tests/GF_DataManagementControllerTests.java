@@ -14,6 +14,8 @@ import org.springframework.util.Assert;
 import com.gf.server.controllers.GF_DataManagementController;
 import com.gf.server.dto.ReqResDTO;
 import com.gf.server.dto.ListResponseDTO;
+import com.gf.server.dto.ExerciseHistoryRequestDTO;
+import com.gf.server.dto.ExerciseHistoryResponseDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.enumerations.EquipmentEnum;
@@ -28,6 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Random;
 import java.util.List;
+import java.util.Arrays;
+import java.util.Date;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -254,5 +258,53 @@ public class GF_DataManagementControllerTests {
         Assert.isTrue(response.equipmentTypes().length == EquipmentEnum.values().length, "Should return all equipment types");
         Assert.isTrue(response.exerciseTypes().length == ExerciseEnum.values().length, "Should return all exercise types");
         Assert.isTrue(response.message().contains("2"), "Message should indicate 2 clients were retrieved");
+    }
+
+    @Test
+    void canGetExerciseHistory() throws Exception {
+        
+        // Create a test client first
+        GF_Client client = this.clientCreationUtilPersistent();
+        
+        // Create some exercise records
+        for (int i = 0; i < 3; i++) {
+            ExerciseRecord record = this.exerciseRecordCreationUtil();
+            record.setClient(client);
+            record.setEquipmentType(EquipmentEnum.NAUTILUS);
+            record.setExercise(ExerciseEnum.BICEP_CURL);
+            this.dataManagementService.createExerciseRecord(record);
+        }
+
+        // Create a date from 1 day ago using a proper format
+        long oneDayAgo = System.currentTimeMillis() - 24 * 60 * 60 * 1000;
+        Date afterDate = new Date(oneDayAgo);
+
+        // Create a fresh client object with all fields for the request
+        GF_Client requestClient = new GF_Client();
+        requestClient.setId(client.getId());
+        requestClient.setEmail(client.getEmail());
+        requestClient.setFirstName(client.getFirstName());
+        requestClient.setLastName(client.getLastName());
+
+        // Create the request manually to avoid date serialization issues
+        String requestJson = String.format(
+            "{\"client\":{\"id\":%d,\"email\":\"%s\",\"firstName\":\"%s\",\"lastName\":\"%s\"},\"equipmentType\":\"NAUTILUS\",\"exerciseType\":\"BICEP_CURL\",\"afterDate\":%d}",
+            requestClient.getId(),
+            requestClient.getEmail(),
+            requestClient.getFirstName(),
+            requestClient.getLastName(),
+            afterDate.getTime()
+        );
+
+        ExerciseHistoryResponseDTO response = gson.fromJson(this.mockMvc.perform(post("/trainer/get/record/history").header("Authorization", this.jwt)
+                                                            .contentType(MediaType.APPLICATION_JSON)
+                                                            .content(requestJson)).andExpect(status().isOk())
+                                                                                        .andReturn()
+                                                                                        .getResponse()
+                                                                                        .getContentAsString(), ExerciseHistoryResponseDTO.class);
+
+        Assert.notNull(response.exerciseRecords(), "Exercise records list should not be null");
+        Assert.isTrue(response.exerciseRecords().size() >= 3, "Should have at least 3 exercise records");
+        Assert.isTrue(response.message().contains("3"), "Message should indicate 3 exercise records were retrieved");
     }
 }

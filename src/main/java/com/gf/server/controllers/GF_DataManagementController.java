@@ -6,6 +6,8 @@ import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
 import com.gf.server.dto.ReqResDTO;
 import com.gf.server.dto.ListResponseDTO;
+import com.gf.server.dto.ExerciseHistoryRequestDTO;
+import com.gf.server.dto.ExerciseHistoryResponseDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.services.GF_DataManagementService;
@@ -110,6 +112,26 @@ public class GF_DataManagementController {
             null, 
             null, 
             latestRecord);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/trainer/get/record/history")
+    public ResponseEntity<ExerciseHistoryResponseDTO> getExerciseHistory(@RequestHeader(HttpHeaders.AUTHORIZATION) String token, @RequestBody ExerciseHistoryRequestDTO request) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        List<ExerciseRecord> exerciseRecords = this.dataManagementService.getExerciseRecordsAfterDate(
+            request.client().getEmail(), 
+            request.equipmentType(), 
+            request.exerciseType(), 
+            request.afterDate()
+        );
+
+        ExerciseHistoryResponseDTO response = new ExerciseHistoryResponseDTO(
+            "Successfully retrieved " + exerciseRecords.size() + " exercise records for client " + request.client().getLastName() + " on " + request.equipmentType().toString() + " doing " + request.exerciseType().toString() + " after " + request.afterDate().toString(),
+            exerciseRecords
+        );
 
         return ResponseEntity.ok(response);
     }

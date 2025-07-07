@@ -15,7 +15,49 @@ Authorization: Bearer <your-jwt-token>
 
 ## Exercise Records
 - **POST** `/trainer/new/record` - Create a new exercise record
-- **GET** `/trainer/get/record/latest` - Get the latest exercise record for a specific client, equipment, and exercise
+- **POST** `/trainer/get/record/latest` - Get the latest exercise record for a specific client, equipment, and exercise
+- **POST** `/trainer/get/record/history` - Get all exercise records for a client, equipment, and exercise after a certain date
+
+### /trainer/get/record/history
+Get all exercise records for a client, for a given equipment type and exercise, after a certain date.
+
+**POST** `/trainer/get/record/history`
+
+**Request Body Example:**
+```json
+{
+  "client": {
+    "email": "jimbob@gmail.com"
+  },
+  "equipmentType": "NAUTILUS",
+  "exerciseType": "BICEP_CURL",
+  "afterDate": 1720310400000
+}
+```
+
+- `afterDate` should be a Unix timestamp (milliseconds since epoch, UTC).
+
+**Response Example:**
+```json
+{
+  "message": "Successfully retrieved 3 exercise records for client Bob on NAUTILUS doing BICEP_CURL after 2025-07-06T00:00:00.000Z",
+  "exerciseRecords": [
+    {
+      "id": 1,
+      "client": { /* client object */ },
+      "equipmentType": "NAUTILUS",
+      "exercise": "BICEP_CURL",
+      "resistance": 50,
+      "seatSetting": 3,
+      "padSetting": 2,
+      "rightArm": 1,
+      "leftArm": 1,
+      "dateTime": "2025-07-06T10:30:00.000Z"
+    }
+    // ... more records
+  ]
+}
+```
 
 ## Reference Data
 - **GET** `/trainer/get/equipment-types` - Get all available equipment types

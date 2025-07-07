@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -103,5 +104,22 @@ public class GF_DataManagementService {
 
     public ExerciseEnum[] getAllExerciseTypes() {
         return ExerciseEnum.values();
+    }
+
+    public List<ExerciseRecord> getExerciseRecordsAfterDate(String clientEmail, EquipmentEnum equipmentType, ExerciseEnum exercise, Date afterDate) throws EntityNotFoundException {
+        
+        Optional<GF_Client> client = this.clientRepository.findByEmail(clientEmail);
+
+        if (!client.isPresent()) {
+            throw new EntityNotFoundException();
+        }
+
+        Optional<List<ExerciseRecord>> exerciseRecords = this.exerciseRecordRepository.findByClientAndEquipmentTypeAndExerciseAndDateTimeAfterOrderByDateTimeDesc(client.get(), equipmentType, exercise, afterDate);
+
+        if (!exerciseRecords.isPresent()) {
+            return new ArrayList<>();
+        }
+
+        return exerciseRecords.get();
     }
 }
