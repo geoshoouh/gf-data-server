@@ -16,4 +16,4 @@ public record ReqResDTO(
     ExerciseEnum exerciseType,
     GF_Client client,
     ExerciseRecord exerciseRecord
-) {}
+) {} 

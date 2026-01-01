@@ -263,4 +263,135 @@ public class GF_DataManagementServiceTests {
             // Expected exception
         }
     }
+
+    @Test
+    void bulkCreateExerciseRecordsSuccessfullyCreatesValidRecords() {
+        // Create a client
+        GF_Client client = this.clientCreationUtilPersistent();
+        
+        // Create exercise records
+        List<ExerciseRecord> records = new java.util.ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            ExerciseRecord record = new ExerciseRecord();
+            record.setClient(client);
+            record.setEquipmentType(EquipmentEnum.NAUTILUS);
+            record.setExercise(ExerciseEnum.BICEP_CURL);
+            record.setResistance(50 + i);
+            record.setSeatSetting(3);
+            record.setPadSetting(2);
+            record.setRightArm(1);
+            record.setLeftArm(1);
+            records.add(record);
+        }
+
+        GF_DataManagementService.BulkUploadResult result = this.dataManagementService.bulkCreateExerciseRecords(records);
+
+        Assert.isTrue(result.getTotalRecords() == 3, "Expected 3 total records");
+        Assert.isTrue(result.getSuccessfulRecords() == 3, "Expected 3 successful records");
+        Assert.isTrue(result.getFailedRecords() == 0, "Expected 0 failed records");
+        Assert.isTrue(result.getErrors().isEmpty(), "Expected no errors");
+        Assert.isTrue(this.dataManagementService.getExerciseRecordCount() == 3L, "Expected 3 records in database");
+    }
+
+    @Test
+    void bulkCreateExerciseRecordsHandlesInvalidClients() {
+        // Create exercise records with invalid client emails
+        List<ExerciseRecord> records = new java.util.ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            ExerciseRecord record = new ExerciseRecord();
+            GF_Client invalidClient = new GF_Client();
+            invalidClient.setEmail("nonexistent" + i + "@email.com");
+            record.setClient(invalidClient);
+            record.setEquipmentType(EquipmentEnum.NAUTILUS);
+            record.setExercise(ExerciseEnum.BICEP_CURL);
+            records.add(record);
+        }
+
+        GF_DataManagementService.BulkUploadResult result = this.dataManagementService.bulkCreateExerciseRecords(records);
+
+        Assert.isTrue(result.getTotalRecords() == 2, "Expected 2 total records");
+        Assert.isTrue(result.getSuccessfulRecords() == 0, "Expected 0 successful records");
+        Assert.isTrue(result.getFailedRecords() == 2, "Expected 2 failed records");
+        Assert.isTrue(result.getErrors().size() == 2, "Expected 2 errors");
+        Assert.isTrue(result.getErrors().get(0).contains("not found"), "Error should mention client not found");
+    }
+
+    @Test
+    void bulkCreateExerciseRecordsHandlesMixedValidAndInvalidRecords() {
+        // Create a valid client
+        GF_Client validClient = this.clientCreationUtilPersistent();
+        
+        // Create exercise records - mix of valid and invalid
+        List<ExerciseRecord> records = new java.util.ArrayList<>();
+        
+        // Valid record
+        ExerciseRecord validRecord = new ExerciseRecord();
+        validRecord.setClient(validClient);
+        validRecord.setEquipmentType(EquipmentEnum.NAUTILUS);
+        validRecord.setExercise(ExerciseEnum.BICEP_CURL);
+        records.add(validRecord);
+        
+        // Invalid record - no client email
+        ExerciseRecord invalidRecord1 = new ExerciseRecord();
+        invalidRecord1.setClient(new GF_Client()); // No email set
+        invalidRecord1.setEquipmentType(EquipmentEnum.KINESIS);
+        invalidRecord1.setExercise(ExerciseEnum.LEG_PRESS);
+        records.add(invalidRecord1);
+        
+        // Invalid record - non-existent client
+        ExerciseRecord invalidRecord2 = new ExerciseRecord();
+        GF_Client invalidClient = new GF_Client();
+        invalidClient.setEmail("nonexistent@email.com");
+        invalidRecord2.setClient(invalidClient);
+        invalidRecord2.setEquipmentType(EquipmentEnum.KEISER);
+        invalidRecord2.setExercise(ExerciseEnum.SQUAT);
+        records.add(invalidRecord2);
+        
+        // Another valid record
+        ExerciseRecord validRecord2 = new ExerciseRecord();
+        validRecord2.setClient(validClient);
+        validRecord2.setEquipmentType(EquipmentEnum.DUMBELL);
+        validRecord2.setExercise(ExerciseEnum.CHEST_PRESS);
+        records.add(validRecord2);
+
+        GF_DataManagementService.BulkUploadResult result = this.dataManagementService.bulkCreateExerciseRecords(records);
+
+        Assert.isTrue(result.getTotalRecords() == 4, "Expected 4 total records");
+        Assert.isTrue(result.getSuccessfulRecords() == 2, "Expected 2 successful records");
+        Assert.isTrue(result.getFailedRecords() == 2, "Expected 2 failed records");
+        Assert.isTrue(result.getErrors().size() == 2, "Expected 2 errors");
+        Assert.isTrue(this.dataManagementService.getExerciseRecordCount() == 2L, "Expected 2 records in database");
+    }
+
+    @Test
+    void bulkCreateExerciseRecordsSetsDefaultDateTime() {
+        // Create a client
+        GF_Client client = this.clientCreationUtilPersistent();
+        
+        // Create exercise record without date time
+        ExerciseRecord record = new ExerciseRecord();
+        record.setClient(client);
+        record.setEquipmentType(EquipmentEnum.NAUTILUS);
+        record.setExercise(ExerciseEnum.BICEP_CURL);
+        record.setResistance(50);
+        // No date time set
+        
+        List<ExerciseRecord> records = new java.util.ArrayList<>();
+        records.add(record);
+
+        GF_DataManagementService.BulkUploadResult result = this.dataManagementService.bulkCreateExerciseRecords(records);
+
+        Assert.isTrue(result.getSuccessfulRecords() == 1, "Expected 1 successful record");
+        
+        // Verify date time was set
+        List<ExerciseRecord> savedRecords = this.dataManagementService.getExerciseRecordsAfterDate(
+            client.getEmail(),
+            EquipmentEnum.NAUTILUS,
+            ExerciseEnum.BICEP_CURL,
+            new Date(System.currentTimeMillis() - 60000) // 1 minute ago
+        );
+        
+        Assert.isTrue(savedRecords.size() == 1, "Should find 1 record");
+        Assert.notNull(savedRecords.get(0).getDateTime(), "Date time should be set");
+    }
 }

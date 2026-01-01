@@ -8,18 +8,24 @@ import com.gf.server.dto.ReqResDTO;
 import com.gf.server.dto.ListResponseDTO;
 import com.gf.server.dto.ExerciseHistoryRequestDTO;
 import com.gf.server.dto.ExerciseHistoryResponseDTO;
+import com.gf.server.dto.BulkUploadResponseDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.services.GF_DataManagementService;
+import com.gf.server.services.ExcelParserService;
+import com.gf.server.services.GF_DataManagementService.BulkUploadResult;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,6 +34,9 @@ public class GF_DataManagementController {
 
     @Autowired
     GF_DataManagementService dataManagementService;
+
+    @Autowired
+    ExcelParserService excelParserService;
 
 
     @SuppressWarnings("null")
@@ -96,6 +105,67 @@ public class GF_DataManagementController {
             savedRecord);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/trainer/bulk/upload/records")
+    public ResponseEntity<BulkUploadResponseDTO> bulkUploadExerciseRecords(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String token,
+            @RequestParam("file") MultipartFile file) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        try {
+            // Parse Excel file
+            List<ExerciseRecord> records = excelParserService.parseExerciseRecords(file.getInputStream());
+            
+            // Bulk create records
+            BulkUploadResult result = dataManagementService.bulkCreateExerciseRecords(records);
+            
+            String message = String.format(
+                "Bulk upload completed: %d total records, %d successful, %d failed",
+                result.getTotalRecords(),
+                result.getSuccessfulRecords(),
+                result.getFailedRecords()
+            );
+            
+            BulkUploadResponseDTO response = new BulkUploadResponseDTO(
+                message,
+                result.getTotalRecords(),
+                result.getSuccessfulRecords(),
+                result.getFailedRecords(),
+                result.getErrors()
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            BulkUploadResponseDTO errorResponse = new BulkUploadResponseDTO(
+                "Error processing file: " + e.getMessage(),
+                0,
+                0,
+                0,
+                List.of(e.getMessage())
+            );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    @GetMapping("/trainer/download/upload-template")
+    public ResponseEntity<byte[]> downloadUploadTemplate(@RequestHeader(HttpHeaders.AUTHORIZATION) String token) throws Unauthorized {
+        
+        this.validateToken(token);
+
+        try {
+            byte[] templateBytes = excelParserService.generateTemplate();
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+            headers.setContentDispositionFormData("attachment", "exercise_records_template.xlsx");
+            headers.setContentLength(templateBytes.length);
+            
+            return new ResponseEntity<>(templateBytes, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/trainer/get/record/latest")

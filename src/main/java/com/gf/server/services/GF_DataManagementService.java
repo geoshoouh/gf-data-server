@@ -8,6 +8,7 @@ import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
@@ -121,5 +122,63 @@ public class GF_DataManagementService {
         }
 
         return exerciseRecords.get();
+    }
+
+    @Transactional
+    public BulkUploadResult bulkCreateExerciseRecords(List<ExerciseRecord> exerciseRecords) {
+        int successful = 0;
+        int failed = 0;
+        List<String> errors = new ArrayList<>();
+
+        for (int i = 0; i < exerciseRecords.size(); i++) {
+            ExerciseRecord record = exerciseRecords.get(i);
+            try {
+                // Validate client exists
+                if (record.getClient() == null || record.getClient().getEmail() == null) {
+                    errors.add("Row " + (i + 2) + ": Client email is required");
+                    failed++;
+                    continue;
+                }
+
+                GF_Client client = getClientByEmail(record.getClient().getEmail());
+                record.setClient(client);
+
+                // Set date time if not provided
+                if (record.getDateTime() == null) {
+                    record.setDateTime(Date.from(Instant.now()));
+                }
+
+                // Save the record
+                this.exerciseRecordRepository.save(record);
+                successful++;
+            } catch (EntityNotFoundException e) {
+                errors.add("Row " + (i + 2) + ": Client with email " + record.getClient().getEmail() + " not found");
+                failed++;
+            } catch (Exception e) {
+                errors.add("Row " + (i + 2) + ": " + e.getMessage());
+                failed++;
+            }
+        }
+
+        return new BulkUploadResult(exerciseRecords.size(), successful, failed, errors);
+    }
+
+    public static class BulkUploadResult {
+        private final int totalRecords;
+        private final int successfulRecords;
+        private final int failedRecords;
+        private final List<String> errors;
+
+        public BulkUploadResult(int totalRecords, int successfulRecords, int failedRecords, List<String> errors) {
+            this.totalRecords = totalRecords;
+            this.successfulRecords = successfulRecords;
+            this.failedRecords = failedRecords;
+            this.errors = errors;
+        }
+
+        public int getTotalRecords() { return totalRecords; }
+        public int getSuccessfulRecords() { return successfulRecords; }
+        public int getFailedRecords() { return failedRecords; }
+        public List<String> getErrors() { return errors; }
     }
 }
