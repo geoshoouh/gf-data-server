@@ -14,23 +14,27 @@ import org.springframework.util.Assert;
 import com.gf.server.controllers.GF_DataManagementController;
 import com.gf.server.dto.ReqResDTO;
 import com.gf.server.dto.ListResponseDTO;
-import com.gf.server.dto.ExerciseHistoryRequestDTO;
 import com.gf.server.dto.ExerciseHistoryResponseDTO;
+import com.gf.server.dto.BulkUploadResponseDTO;
 import com.gf.server.entities.ExerciseRecord;
 import com.gf.server.entities.GF_Client;
 import com.gf.server.enumerations.EquipmentEnum;
 import com.gf.server.enumerations.ExerciseEnum;
 import com.gf.server.services.GF_DataManagementService;
+import com.gf.server.services.ExcelParserService;
 import com.google.gson.Gson;
+
+import org.springframework.mock.web.MockMultipartFile;
 
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import java.util.Random;
-import java.util.List;
-import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -44,6 +48,9 @@ public class GF_DataManagementControllerTests {
 
     @Autowired 
     GF_DataManagementService dataManagementService;
+
+    @Autowired
+    ExcelParserService excelParserService;
 
     @Autowired
     MockMvc mockMvc;
@@ -195,9 +202,9 @@ public class GF_DataManagementControllerTests {
     void canGetAllClients() throws Exception {
         
         // Create some test clients
-        GF_Client client1 = this.clientCreationUtilPersistent();
-        GF_Client client2 = this.clientCreationUtilPersistent();
-        GF_Client client3 = this.clientCreationUtilPersistent();
+        this.clientCreationUtilPersistent();
+        this.clientCreationUtilPersistent();
+        this.clientCreationUtilPersistent();
 
         ListResponseDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/clients").header("Authorization", this.jwt))
                                                         .andExpect(status().isOk())
@@ -242,8 +249,8 @@ public class GF_DataManagementControllerTests {
     void canGetAllData() throws Exception {
         
         // Create some test clients
-        GF_Client client1 = this.clientCreationUtilPersistent();
-        GF_Client client2 = this.clientCreationUtilPersistent();
+        this.clientCreationUtilPersistent();
+        this.clientCreationUtilPersistent();
 
         ListResponseDTO response = gson.fromJson(this.mockMvc.perform(get("/trainer/get/all").header("Authorization", this.jwt))
                                                         .andExpect(status().isOk())
@@ -306,5 +313,145 @@ public class GF_DataManagementControllerTests {
         Assert.notNull(response.exerciseRecords(), "Exercise records list should not be null");
         Assert.isTrue(response.exerciseRecords().size() >= 3, "Should have at least 3 exercise records");
         Assert.isTrue(response.message().contains("3"), "Message should indicate 3 exercise records were retrieved");
+    }
+
+    @Test
+    void canDownloadUploadTemplate() throws Exception {
+        this.mockMvc.perform(get("/trainer/download/upload-template").header("Authorization", this.jwt))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
+                .andExpect(header().string("Content-Disposition", "form-data; name=\"attachment\"; filename=\"exercise_records_template.xlsx\""))
+                .andReturn();
+    }
+
+    @Test
+    void canBulkUploadExerciseRecords() throws Exception {
+        // Create a client first
+        GF_Client client = this.clientCreationUtilPersistent();
+        
+        // Generate a valid Excel file
+        byte[] templateBytes = excelParserService.generateTemplate();
+        
+        // Modify the template to have valid data (replace example row)
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(templateBytes))) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(0);
+            
+            // Replace example row with valid data
+            org.apache.poi.ss.usermodel.Row dataRow = sheet.getRow(1);
+            dataRow.getCell(0).setCellValue(client.getEmail());
+            dataRow.getCell(1).setCellValue("NAUTILUS");
+            dataRow.getCell(2).setCellValue("BICEP_CURL");
+            dataRow.getCell(3).setCellValue(50);
+            dataRow.getCell(4).setCellValue(3);
+            dataRow.getCell(5).setCellValue(2);
+            dataRow.getCell(6).setCellValue(1);
+            dataRow.getCell(7).setCellValue(1);
+            
+            // Add another valid row
+            org.apache.poi.ss.usermodel.Row dataRow2 = sheet.createRow(2);
+            dataRow2.createCell(0).setCellValue(client.getEmail());
+            dataRow2.createCell(1).setCellValue("KINESIS");
+            dataRow2.createCell(2).setCellValue("LEG_PRESS");
+            dataRow2.createCell(3).setCellValue(75);
+            dataRow2.createCell(4).setCellValue(5);
+            dataRow2.createCell(5).setCellValue(4);
+            dataRow2.createCell(6).setCellValue(2);
+            dataRow2.createCell(7).setCellValue(2);
+            
+            // Write to byte array
+            java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+            workbook.write(outputStream);
+            templateBytes = outputStream.toByteArray();
+        }
+        
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "test.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            templateBytes
+        );
+
+        BulkUploadResponseDTO response = gson.fromJson(
+            this.mockMvc.perform(multipart("/trainer/bulk/upload/records")
+                    .file(file)
+                    .header("Authorization", this.jwt))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString(),
+            BulkUploadResponseDTO.class
+        );
+
+        Assert.notNull(response, "Response should not be null");
+        Assert.isTrue(response.totalRecords() >= 2, "Should process at least 2 records");
+        Assert.isTrue(response.successfulRecords() >= 2, "Should successfully create at least 2 records");
+        Assert.isTrue(response.failedRecords() == 0, "Should have no failed records");
+    }
+
+    @Test
+    void bulkUploadHandlesInvalidFile() throws Exception {
+        // Create invalid file content
+        byte[] invalidContent = "This is not an Excel file".getBytes();
+        
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "invalid.txt",
+            "text/plain",
+            invalidContent
+        );
+
+        this.mockMvc.perform(multipart("/trainer/bulk/upload/records")
+                .file(file)
+                .header("Authorization", this.jwt))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+    }
+
+    @Test
+    void bulkUploadHandlesInvalidClientEmails() throws Exception {
+        // Create a client (not used but ensures database is set up)
+        this.clientCreationUtilPersistent();
+        
+        // Generate template
+        byte[] templateBytes = excelParserService.generateTemplate();
+        
+        // Modify to have invalid client email
+        try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(new java.io.ByteArrayInputStream(templateBytes))) {
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(0);
+            
+            // Replace example row with invalid client email
+            org.apache.poi.ss.usermodel.Row dataRow = sheet.getRow(1);
+            dataRow.getCell(0).setCellValue("nonexistent@email.com");
+            dataRow.getCell(1).setCellValue("NAUTILUS");
+            dataRow.getCell(2).setCellValue("BICEP_CURL");
+            
+            // Write to byte array
+            java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+            workbook.write(outputStream);
+            templateBytes = outputStream.toByteArray();
+        }
+        
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "test.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            templateBytes
+        );
+
+        BulkUploadResponseDTO response = gson.fromJson(
+            this.mockMvc.perform(multipart("/trainer/bulk/upload/records")
+                    .file(file)
+                    .header("Authorization", this.jwt))
+                    .andExpect(status().isOk())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString(),
+            BulkUploadResponseDTO.class
+        );
+
+        Assert.notNull(response, "Response should not be null");
+        Assert.isTrue(response.failedRecords() > 0, "Should have failed records");
+        Assert.isTrue(response.errors().size() > 0, "Should have error messages");
+        Assert.isTrue(response.errors().get(0).contains("not found"), "Error should mention client not found");
     }
 }
